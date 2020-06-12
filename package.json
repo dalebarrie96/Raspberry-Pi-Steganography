@@ -1,0 +1,23 @@
+{
+  "name": "raspberry-pi-steganography",
+  "version": "1.0.0",
+  "description": "this is a small app to hopefully turn  a raspberry pi into a stand along steganography message device",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "raspberry",
+    "pi",
+    "steganography",
+    "cryptography",
+    "encryption",
+    "hidden",
+    "message"
+  ],
+  "author": "dbarrie",
+  "license": "ISC",
+  "dependencies": {
+    "jimp": "^0.13.0"
+  }
+}
