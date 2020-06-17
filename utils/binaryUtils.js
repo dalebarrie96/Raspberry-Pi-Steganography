@@ -1,6 +1,6 @@
 module.exports = {
 	
-	binaryStringToText: function(binary){
+	binaryStringToText: (binary) => {
 		
 		console.log(binary);
 		console.log("Converting above binary to original string");
@@ -17,11 +17,11 @@ module.exports = {
 		return hiddenMessage;
 	},
 	
-	byteFromBinary: function(bin){
+	byteFromBinary: (bin) => {
 		return ("000000000" + bin).substr(-8);
 	},
 	
-	byteFromNumber: function(n){
+	byteFromNumber: (n) => {
 		if (n < 0 || n > 255 || n % 1 !== 0) {
 			throw new Error(n + " does not fit in a byte");
 		}
