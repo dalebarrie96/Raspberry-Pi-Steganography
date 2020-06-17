@@ -1,8 +1,8 @@
 const crypto = require('crypto');
 
 const ENCRYPTION_METHOD = 'aes-256-cbc'; 
-const ENCRYPTION_KEY_LENGTH = 32; // Must be 256 bits (32 characters)
-const IV_LENGTH = 16; // For AES, this is always 16
+const ENCRYPTION_KEY_LENGTH = 32; // (32 bytes/characters)
+const IV_LENGTH = 16; // 16 for AES
 
 var password = 'password123';
 var salt = 'saltBae';
