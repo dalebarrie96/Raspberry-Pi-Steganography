@@ -2,19 +2,25 @@ module.exports = {
 	
 	binaryStringToText: (binary) => {
 		
-		console.log(binary);
-		console.log("Converting above binary to original string");
-		
-		var hiddenMessage = "";
-
+		var _hiddenMessage = "";
 		
 		var bytes = binary.match(/.{1,8}/g); //find a nicer way to do this
 		
 		for(i = 0; i < bytes.length; i++){
-			hiddenMessage += String.fromCharCode(parseInt(bytes[i], 2));
+			_hiddenMessage += String.fromCharCode(parseInt(bytes[i], 2));
 		}
 		
-		return hiddenMessage;
+		return _hiddenMessage;
+	},
+	
+	messageTextToBinaryString:	(message) => {
+		var _binaryString = "";
+		
+		for (var i = 0; i < message.length; i++) {
+			_binaryString += module.exports.byteFromBinary(message[i].charCodeAt(0).toString(2));
+		}
+		
+		return _binaryString;
 	},
 	
 	byteFromBinary: (bin) => {
