@@ -4,8 +4,8 @@ const fileUtils = require('./utils/fileUtils');
 
 console.log("Lets code some shit!");
 
-embedMessage();
-//extractMessage();
+//embedMessage();
+extractMessage();
 
 function embedMessage(){
 	
@@ -15,7 +15,7 @@ function embedMessage(){
 	fileUtils.readMessageFile("./documents/message.txt", function(err,data){
 		var encryptedMessage = encryptionUtils.encryptText(data);
 		
-		stegUtils.embedMessage(encryptedMessage, './documents/glasgow-png.png');
+		stegUtils.embedMessage(encryptedMessage, './documents/r-kent.jpeg');
 		
 	});
 }

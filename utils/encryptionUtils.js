@@ -20,6 +20,8 @@ module.exports = {
 		let encryptedText = cipher.update(plainText, 'utf8', 'hex');
 		encryptedText += cipher.final('hex');
 		
+		console.log(encryptedText);
+		
 		return encryptedText;
 	},
 	
