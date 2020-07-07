@@ -12,6 +12,8 @@ module.exports = {
 			Jimp.read(buffer)
 				.then(image => {
 					
+				console.log('Starting to embed encrypted text');
+					
 				var _width = image.bitmap.width;
 				var _height = image.bitmap.height;
 				
@@ -69,6 +71,8 @@ module.exports = {
 				
 					image.write('output.png'); // save
 					
+					console.log('Saved new image with embedded text');
+					
 				}
 				
 			})
@@ -91,6 +95,8 @@ module.exports = {
 			
 			Jimp.read(buffer)
 				.then(image => {
+					
+					console.log('Starting to extract encrypted text');
 					
 					var _count = 1;
 					

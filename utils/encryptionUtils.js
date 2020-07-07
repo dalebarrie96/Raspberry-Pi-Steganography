@@ -14,19 +14,18 @@ const key = generateKeySync(password, salt, ENCRYPTION_KEY_LENGTH);
 module.exports = {
 	
 	encryptText : (plainText) => {
-		//const key = generateKeySync(password, salt, ENCRYPTION_KEY_LENGTH);
+		console.log('About to encrypt text');
 		const cipher = crypto.createCipheriv(ENCRYPTION_METHOD, key, IV);
 		
 		let encryptedText = cipher.update(plainText, 'utf8', 'hex');
 		encryptedText += cipher.final('hex');
 		
-		console.log(encryptedText);
-		
 		return encryptedText;
 	},
 	
 	decryptText : (encryptedText) => {
-		//const key = generateKeySync(password, salt, ENCRYPTION_KEY_LENGTH);
+		console.log('About to decrypt text');
+		
 		const decipher = crypto.createDecipheriv(ENCRYPTION_METHOD, key, IV);
 		
 		let decryptedText = decipher.update(encryptedText, 'hex', 'utf8');

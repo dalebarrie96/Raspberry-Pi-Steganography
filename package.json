@@ -18,6 +18,8 @@
   "author": "dbarrie",
   "license": "ISC",
   "dependencies": {
-    "jimp": "^0.13.0"
+    "drivelist": "^9.0.2",
+    "jimp": "^0.13.0",
+    "usb-detection": "^4.9.0"
   }
 }
