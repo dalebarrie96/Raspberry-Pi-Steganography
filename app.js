@@ -59,9 +59,19 @@ function deriveAction(usbDrive){
 function embedMessage(usbRoot, pngFiles){
 	
 	fileUtils.readMessageFile(usbRoot + MESSAGE_FILE, function(err,data){
-		var encryptedMessage = encryptionUtils.encryptText(data);
+		var encryptedMessage = encryptionUtils.encryptText(data)
 		
-		stegUtils.embedMessage(encryptedMessage, usbRoot + pngFiles[0]).then(console.log('then then?'));
+		for(i=0; i < pngFiles.length; i++){
+			var promise = stegUtils.embedMessage(encryptedMessage, usbRoot + pngFiles[0]);
+			
+			promise.then((res) => {
+				console.log(res.status);
+				//call file handling stuff
+				//break; this breaks.. ironic huh			
+			}).catch((err) => {
+				console.log('ERROR : ' + err.message);
+			});
+		}	
 		
 	});
 }

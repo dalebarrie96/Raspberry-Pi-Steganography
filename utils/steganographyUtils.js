@@ -7,82 +7,89 @@ module.exports = {
 	
 	embedMessage : (message, filepath) => {
 		
-		fileUtils.readImageBuffer(filepath, function(err,buffer){
+		return new Promise(async function(res,rej){
+			
+			fileUtils.readImageBuffer(filepath, function(err,buffer){
 				
-			Jimp.read(buffer)
-				.then(image => {
-					
-				console.log('Starting to embed encrypted text');
-					
-				var _width = image.bitmap.width;
-				var _height = image.bitmap.height;
-				
-				var _total_pixels = _width * _height;
-				
-				if(canEmbedMessage(_total_pixels,message)){
-					
-					var _binaryString = binaryUtils.messageTextToBinaryString(message);
-					
-					var _count = 1;
-					
-					image.scan(0, 0, _width, _height , function(x, y, idx) {
+				Jimp.read(buffer)
+					.then(image => {
 						
-						var red = this.bitmap.data[idx + 0];
-						var green = this.bitmap.data[idx + 1];
-						var blue = this.bitmap.data[idx + 2];
-						var alpha = this.bitmap.data[idx + 3];
+					console.log('Starting to embed encrypted text');
 						
-						if(_count === 8 && _binaryString.length > 0){
-							//we need to add a keep reading check bit (0)
-							red = red &= ~1;
+					var _width = image.bitmap.width;
+					var _height = image.bitmap.height;
+					
+					var _total_pixels = _width * _height;
+					
+					if(canEmbedMessage(_total_pixels,message)){
+						
+						var _binaryString = binaryUtils.messageTextToBinaryString(message);
+						
+						var _count = 1;
+						
+						image.scan(0, 0, _width, _height , function(x, y, idx) {
 							
-							_count = 1;
+							var red = this.bitmap.data[idx + 0];
+							var green = this.bitmap.data[idx + 1];
+							var blue = this.bitmap.data[idx + 2];
+							var alpha = this.bitmap.data[idx + 3];
 							
-							saveNewPixel(image,idx,red,x,y);
-							
-						}else if(_count === 8 && _binaryString.length === 0){
-							//we need to add a stop reading check bit (1)
-							
-							red = red |= 1;
-							
-							_count = 1;
-							
-							saveNewPixel(image,idx,red,x,y);
-							
-						}else{
-							//we need to add a message bit
-							var bit = _binaryString.charAt(0);
-							
-							if(bit == 1){
-								red = red |= 1;
-							}else if(bit == 0){
+							if(_count === 8 && _binaryString.length > 0){
+								//we need to add a keep reading check bit (0)
 								red = red &= ~1;
+								
+								_count = 1;
+								
+								saveNewPixel(image,idx,red,x,y);
+								
+							}else if(_count === 8 && _binaryString.length === 0){
+								//we need to add a stop reading check bit (1)
+								
+								red = red |= 1;
+								
+								_count = 1;
+								
+								saveNewPixel(image,idx,red,x,y);
+								
+							}else{
+								//we need to add a message bit
+								var bit = _binaryString.charAt(0);
+								
+								if(bit == 1){
+									red = red |= 1;
+								}else if(bit == 0){
+									red = red &= ~1;
+								}
+								
+								saveNewPixel(image,idx,red,x,y);
+								
+								_binaryString = _binaryString.substr(1);
+								
+								_count++;
+							
 							}
 							
-							saveNewPixel(image,idx,red,x,y);
-							
-							_binaryString = _binaryString.substr(1);
-							
-							_count++;
-						
-						}
-						
-					});
-				
-					image.write('output.png'); // save
+						});
 					
-					console.log('Saved new image with embedded text');
+						image.write('output.png'); // save
+						
+						console.log('Saved new image with embedded text');
+						
+						res({'status': 'success', 'message' : 'Successfully embedded message into image'});
+						
+					}else{
+						rej({'status': 'error', 'message' : 'Cannot fit encrypted message inside image. Please provide a larger image or smaller message.'});
+					}
 					
-				}
-				
-			})
-			.catch(err => {
-				// Handle an exception.
-				console.log("something went wrong! oops");
-				console.log(err);
-			});
+				})
+				.catch(err => {
+					// Handle an exception.
+					rej({'status': 'error', 'message' : err});
+				});
 			
-		});
+			});
+		}); 
+		
 	},
 	
 	extractMessage : (filepath) => {
