@@ -2,12 +2,13 @@ const Jimp = require('jimp');
 const fs = require('fs');
 const fileUtils = require('../utils/fileUtils');
 const binaryUtils = require('../utils/binaryUtils');
+const encryptionUtils = require('../utils/encryptionUtils');
 
 module.exports = {
 	
 	embedMessage : (message, filepath) => {
 		
-		return new Promise(async function(res,rej){
+		return new Promise(function(res,rej){
 			
 			fileUtils.readImageBuffer(filepath, function(err,buffer){
 				
@@ -94,53 +95,55 @@ module.exports = {
 	
 	extractMessage : (filepath) => {
 		
-		fileUtils.readImageBuffer(filepath, function(err,buffer){
+		return new Promise(function(res,rej){
 		
-			var _binaryString = "";
-					
-			var _finalString = "";
+			fileUtils.readImageBuffer(filepath, function(err,buffer){
 			
-			Jimp.read(buffer)
-				.then(image => {
-					
-					console.log('Starting to extract encrypted text');
-					
-					var _count = 1;
-					
-					image.scan(0, 0, image.bitmap.width, image.bitmap.height, function(x, y, idx) {
-						//get the red pixel to update
-						var red = this.bitmap.data[idx + 0];
-						var green = this.bitmap.data[idx + 1];
-						var blue = this.bitmap.data[idx + 2];
-						var alpha = this.bitmap.data[idx + 3];
+				var _binaryString = "";
 						
-						if(_count == 8){
-							//we need to add a keep reading check if we should keep reading or not
-							var _checkBit = red.toString(2).slice(-1);
+				var _finalString = "";
+				
+				Jimp.read(buffer)
+					.then(image => {
+						
+						console.log('Starting to extract encrypted text');
+						
+						var _count = 1;
+						
+						image.scan(0, 0, image.bitmap.width, image.bitmap.height, function(x, y, idx) {
+							//get the red pixel to update
+							var red = this.bitmap.data[idx + 0];
+							var green = this.bitmap.data[idx + 1];
+							var blue = this.bitmap.data[idx + 2];
+							var alpha = this.bitmap.data[idx + 3];
 							
-							if(_checkBit == 0){
-								_count = 1;
-							}else{
-								_finalString = _binaryString
-							}
+							if(_count == 8){
+								//we need to add a keep reading check if we should keep reading or not
+								var _checkBit = red.toString(2).slice(-1);
 								
-						}else{
-							//we need to add a message bit
-							_binaryString += red.toString(2).slice(-1);
-							
-							_count++;						
-						}
-					});
+								if(_checkBit == 0){
+									_count = 1;
+								}else{
+									_finalString = _binaryString
+								}
+									
+							}else{
+								//we need to add a message bit
+								_binaryString += red.toString(2).slice(-1);
+								
+								_count++;						
+							}
+						});
 					
-					console.log(_finalString);
-					console.log(binaryUtils.binaryStringToText(_finalString));
-				})
-				.catch(err => {
-					// Handle an exception.
-					console.log("something went wrong! oops");
-					console.log(err);
-				});
-		});	
+						
+						res({'status': 'success', 'hexString' : binaryUtils.binaryStringToText(_finalString)});
+					})
+					.catch(err => {
+						// Handle an exception.
+						rej({'status': 'error', 'message' : err});
+					});
+			});	
+		});
 	}
 }
 

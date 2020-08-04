@@ -12,3 +12,7 @@ This needs usbmount to run properly as it will be in headless mode
 https://www.raspberrypi.org/forums/viewtopic.php?t=205016
 
 If your using a pi 4 you will need to change Privatemounts to no
+
+run this to modify automount permissions (https://capocasa.net/usb-automount)
+
+sudo sed -i '/\bMOUNTOPTIONS\b/s/\("\?\)$/,user,umask=000\1/' /etc/usbmount/usbmount.conf

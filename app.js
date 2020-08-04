@@ -1,13 +1,14 @@
 const usbDetect = require('usb-detection');
 const drivelist = require('drivelist');
 const fs = require('fs');
+const fsp = require("fs/promises"); 
 
 const encryptionUtils = require('./utils/encryptionUtils');
 const stegUtils = require('./utils/steganographyUtils');
 const fileUtils = require('./utils/fileUtils');
 
 const MESSAGE_FILE = 'message.txt';
-const OUTPUT_FILE = 'output.png';
+const OUTPUT_FILE_PREFIX = 'steg_';
 const IMAGE_EXTENSION = '.png'
 
 usbDetect.startMonitoring();
@@ -18,7 +19,7 @@ usbDetect.on('add', (device) => {
 	
 	console.log('USB Device connected');
 	
-	var waitTillMounted = setInterval(function(){
+	let waitTillMounted = setInterval(function(){
 		drivelist.list().then((drives) => {
 			drives.forEach((drive) => {
 				if(drive.busType === 'USB' && drive.description.includes(device.deviceName)){
@@ -31,24 +32,25 @@ usbDetect.on('add', (device) => {
 	
 });
 
+
 /*
  * We need to find out if we want to embed or extract a message
  */
 function deriveAction(usbDrive){
-	var _root = usbDrive.mountpoints[0].path + '/';
+	let _root = usbDrive.mountpoints[0].path + '/';
 	
-	var hasMessageFile = fs.existsSync(_root + MESSAGE_FILE);
-	var pngFiles = fs.readdirSync(_root).filter(fn => fn.endsWith(IMAGE_EXTENSION) && fn != OUTPUT_FILE);
-	var hasOutputFile = fs.existsSync(_root + OUTPUT_FILE);
+	let hasMessageFile = fs.existsSync(_root + MESSAGE_FILE);
+	let pngFiles = fs.readdirSync(_root).filter(fn => fn.endsWith(IMAGE_EXTENSION) && !fn.startsWith(OUTPUT_FILE_PREFIX));
+	let outputFiles = fs.readdirSync(_root).filter(fn => fn.startsWith(OUTPUT_FILE_PREFIX));
 		
 	if(hasMessageFile && pngFiles.length > 0){
 		console.log('About to embed message.txt into image');
 		
-		embedMessage(_root, pngFiles);
-	}else if(hasOutputFile){
-		console.log('About to extract message from image');
+		startEmbedMessage(_root, pngFiles);
+	}else if(outputFiles.length > 0){
+		console.log('About to extract message from images');
 		
-		extractMessage();
+		extractMessages(_root,outputFiles);
 	}else{
 		throw new Error('Ooops! It looks like your missing the appropriate files.');
 	}
@@ -56,26 +58,59 @@ function deriveAction(usbDrive){
 }
 
 
-function embedMessage(usbRoot, pngFiles){
+function startEmbedMessage(usbRoot, pngFiles){
 	
 	fileUtils.readMessageFile(usbRoot + MESSAGE_FILE, function(err,data){
-		var encryptedMessage = encryptionUtils.encryptText(data)
+		let encryptedMessage = encryptionUtils.encryptText(data)
 		
-		for(i=0; i < pngFiles.length; i++){
-			var promise = stegUtils.embedMessage(encryptedMessage, usbRoot + pngFiles[0]);
-			
-			promise.then((res) => {
-				console.log(res.status);
-				//call file handling stuff
-				//break; this breaks.. ironic huh			
-			}).catch((err) => {
-				console.log('ERROR : ' + err.message);
-			});
-		}	
+		stegUtils.embedMessage(encryptedMessage, usbRoot + pngFiles[0]).then((res) => {
+			console.log(res.message);
+			handleEmbedCleanUp(usbRoot, pngFiles[0]);
+		}).catch((rej) => {
+			console.error(rej.message);
+		})
 		
 	});
 }
 
-function extractMessage(){
-	stegUtils.extractMessage('output.png');
+
+function handleEmbedCleanUp(usbRoot, filename){
+	
+	//delete original image
+	let origPromise = fsp.unlink(usbRoot + filename);
+	//delete message file
+	let messagePromise = fsp.unlink(usbRoot + MESSAGE_FILE);
+	//move output file to flash drive with new name
+	let copyPromise = fileUtils.copyImage(__dirname+'/output.png', usbRoot + OUTPUT_FILE_PREFIX + filename);
+	
+	Promise.allSettled([origPromise,messagePromise,copyPromise]).then((results) => results.forEach((result) => console.log(result.status)))
+}
+
+function extractMessages(usbRoot, filesArray){
+	
+	filesArray.forEach((item, index) => {
+		let prom = stegUtils.extractMessage(usbRoot + item);
+		
+		prom.then((res) => {
+			
+			let hexString = res.hexString;
+			
+			let message = encryptionUtils.decryptText(hexString);
+			
+			fileUtils.writeExtractedMessageFile(message, usbRoot, item).then((res) => {
+				console.log(res.message);
+			}).catch((rej) => {
+				console.error(rej.message);
+			})
+		
+		}).catch((rej) => {
+			console.error(rej);
+		
+		})
+	});
+	
+}
+
+function makeDocumentFile(message, file, filepath){
+
 }
