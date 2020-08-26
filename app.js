@@ -111,6 +111,3 @@ function extractMessages(usbRoot, filesArray){
 	
 }
 
-function makeDocumentFile(message, file, filepath){
-
-}
